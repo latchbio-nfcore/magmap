@@ -33,24 +33,18 @@ On release, automated continuous integration tests run the pipeline on a full-si
 2. Present QC for raw reads ([`MultiQC`](http://multiqc.info/))
 3. Quality trimming and adapters removal for raw reads ([`Trimm Galore!`](https://www.bioinformatics.babraham.ac.uk/projects/trim_galore/))
 4. Filter reads with [`BBduk`](https://sourceforge.net/projects/bbmap/)
-5. Select reference genomes based on k-mer signatures in reads with [`SOURMASH`](https://sourmash.readthedocs.io/en/latest/)
+5. Select reference genomes based on k-mer signatures in reads with [`SOURMASH`](https://sourmash.readthedocs.io/en/latest/) (Can be skipped.)
 6. Quantification of genes identified in selected reference genomes:
-   1. generate index of assembly ([`BBmap index`](https://sourceforge.net/projects/bbmap/))
-   2. Mapping cleaned reads to the assembly for quantification ([`BBmap`](https://sourceforge.net/projects/bbmap/))
+   1. Generate index of selected reference genomes ([`BBmap index`](https://sourceforge.net/projects/bbmap/))
+   2. Map clean reads to the reference genomes for quantification ([`BBmap`](https://sourceforge.net/projects/bbmap/))
    3. Get raw counts per each gene present in the genomes ([`Featurecounts`](http://subread.sourceforge.net)) -> TSV table with collected featurecounts output
-7. Choice of functional annotation:
-   1. [`Eggnog-mapper`](http://eggnog-mapper.embl.de)
-   2. [`kofamscan`](https://github.com/takaram/kofam_scan)
-   3. [`Hmmsearch`](https://www.ebi.ac.uk/Tools/hmmer/search/hmmsearch). Besides searching the ORFs, each ORF's hits will be ranked.
-8. Summary statistics table. Collect_stats.R
+7. Summarise genome statistics and taxonomy (Dependent on CheckM/CheckM2 and GTDB-Tk data.)
+8. Summarise output.
 
 ## Usage
 
 > [!NOTE]
 > If you are new to Nextflow and nf-core, please refer to [this page](https://nf-co.re/docs/usage/installation) on how to set-up Nextflow. Make sure to [test your setup](https://nf-co.re/docs/usage/introduction#how-to-run-a-pipeline) with `-profile test` before running the workflow on actual data.
-
-<!-- TODO nf-core: Describe the minimum required steps to execute the pipeline, e.g. how to prepare samplesheets.
-     Explain what rows and columns represent. For instance (please edit as appropriate):
 
 First, prepare a samplesheet with your input data that looks as follows:
 
@@ -63,12 +57,24 @@ CONTROL_REP1,AEG588A1_S1_L002_R1_001.fastq.gz,AEG588A1_S1_L002_R2_001.fastq.gz
 
 Each row represents a fastq file (single-end) or a pair of fastq files (paired end).
 
--->
+Then decide if you want to use a set of genomes specified by you, a Sourmash index file pointing to genomes available at NCBI or a combination.
+To specify your own genomes, create a file looking as follows:
+
+`genomes.csv`:
+
+```csv
+accno,genome_fna,genome_gff
+e_coli,contigs/e_coli.fna.gz,gffs/e_coli.gff.gz
+GCA_002688505.1,https://github.com/nf-core/test-datasets/raw/magmap/testdata/GCA_002688505.1_ASM268850v1_genomic.fna.gz,
+```
+
+Each row represents one genome. _Note_ that the `genome_fna` (contigs) field is required, but the `genome_gff` is not.
+If the latter is missing, the genome will be annotated with Prokka.
 
 Now, you can run the pipeline using:
 
 ```bash
-nextflow run nf-core/magmap --input samplesheet.csv --reference_csv reference_genomes.csv --outdir <OUTDIR> -profile <docker/singularity/podman/shifter/charliecloud/conda/institute>
+nextflow run nf-core/magmap --input samplesheet.csv --genomeinfo genomes.csv --outdir <OUTDIR> -profile <docker/singularity/podman/shifter/charliecloud/conda/institute>
 ```
 
 :::warning
@@ -98,9 +104,7 @@ For further information or help, don't hesitate to get in touch on the [Slack `#
 ## Citations
 
 <!-- TODO nf-core: Add citation for pipeline after first release. Uncomment lines below and update Zenodo doi and badge at the top of this file. -->
-<!-- If you use nf-core/magmap for your analysis, please cite it using the following doi: [10.5281/zenodo.XXXXXX](https://doi.org/10.5281/zenodo.XXXXXX) -->
-
-<!-- TODO nf-core: Add bibliography of tools and data used in your pipeline -->
+If you use nf-core/magmap for your analysis, please cite it using the following doi: [10.5281/zenodo.XXXXXX](https://doi.org/10.5281/zenodo.XXXXXX)
 
 An extensive list of references for the tools used by the pipeline can be found in the [`CITATIONS.md`](CITATIONS.md) file.
 
